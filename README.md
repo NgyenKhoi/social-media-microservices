@@ -18,14 +18,14 @@ The platform follows a cloud-native microservices architecture featuring:
 - **Service Discovery** (Eureka or Consul) – dynamic service registration and lookup
 - **Config Server** – centralized configuration for all services
 - **Authentication Service** – JWT, OAuth2 (Google), token lifecycle management
-- **Profile Service** – user profile/metadata management
+- **User Service** – user profile/metadata management
 - **Post Service** – create/edit/delete posts
 - **Comment Service** – post comments, sub-comments
 - **Notification Service** – event-driven notifications
 - **Chat Service** – WebSocket messaging + Message Queue
 - **Search Service** – Elasticsearch-based full-text search
-- **MongoDB + PostgreSQL** – polyglot persistence demonstration
-- **gRPC** inter-service communication (selected services)
+- **MongoDB + PostgreSQL + Neo4j** – polyglot persistence demonstration
+- **OpenFeign** inter-service communication – declarative REST client
 - **Message Broker** (RabbitMQ or Kafka) – async communication
 - **Prometheus + Grafana** – metrics & monitoring
 - **OpenTelemetry (OTEL)** – distributed tracing
@@ -40,12 +40,13 @@ The platform follows a cloud-native microservices architecture featuring:
 - **Spring Boot 3.x**
 - **Spring Cloud 2024.x**
 - **Spring Security** (JWT + OAuth2 Login)
-- **gRPC & Spring Cloud Stream**
+- **OpenFeign** – declarative REST client for service-to-service communication
 - **WebSocket (STOMP)**
 
 ### Databases
 - **PostgreSQL** (relational)
 - **MongoDB** (NoSQL)
+- **Neo4j** (graph database for social relationships & profile connections)
 - **Redis** (cache & WebSocket session storage)
 - **Elasticsearch** (search engine)
 
@@ -76,7 +77,7 @@ The platform follows a cloud-native microservices architecture featuring:
 │
 ├── services/
 │   ├── auth-service/           # JWT + OAuth2 authentication
-│   ├── profile-service/
+│   ├── user-service/
 │   ├── post-service/
 │   ├── comment-service/
 │   ├── notification-service/
