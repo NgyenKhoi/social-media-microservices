@@ -1,0 +1,39 @@
+server:
+  port: 8080
+
+spring:
+ application:
+  name: api-gateway
+
+ cloud:
+    gateway:
+     default-filters:
+       - name: Retry
+         args:
+           retries: 3
+           statuses:
+             - BAD_GATEWAY
+     routes:
+        # route for auth service
+        - id: auth_route
+          uri: lb://AUTH-SERVICE
+          predicates:
+        - Path=/api/auth/**
+        # route for user service
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+        - Path=/api/users/**
+        # route for post service
+        - id: post-service
+          uri: lb://POST-SERVICE
+          predicates:
+        - Path=/api/posts/**
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/ 
+  instance:
+    instance-id: ${spring.application.name}:${instance.id:${random.value}}
+    prefer-ip-address: true

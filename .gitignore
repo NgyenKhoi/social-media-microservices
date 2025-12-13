@@ -107,10 +107,34 @@ application-prod.properties
 application-dev.yml
 application-dev.properties
 secrets/
+.secret/
+.secrets/
+
+# Cryptography & Keys
 *.key
 *.pem
+*.p12
+*.pkcs12
+*.jks
+*.keystore
+*.truststore
+*.der
+*.cer
+*.crt
+jwt_private.pem
+jwt_public.pem
+jwt_*
+rsa_*
+
+# OAuth & Credentials
+*.credentials
+*.oauth
+*.token
 
 # Build outputs
 out/
 dist/
 *.zip
+
+# Others
+.secrets
