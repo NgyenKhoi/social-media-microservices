@@ -1,15 +1,15 @@
 spring:
- application:
-  name: auth-service
- datasource:
-  url: jdbc:postgresql://localhost:5432/auth_service_db
-  username: postgres
-  password: eqfleqrd1
-  driver-class-name: org.postgresql.Driver
-profiles:
-  active: local
+  application:
+    name: auth-service
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth_service_db
+    username: postgres
+    password: ${DATABASE_PASSWORD:eqfleqrd1}
+    driver-class-name: org.postgresql.Driver
 
 jwt:
- key:
-  private: ${JWT_PRIVATE_KEY}
-  public: ${JWT_PUBLIC_KEY}
+  key:
+    private: ${JWT_PRIVATE_KEY}
+    public: ${JWT_PUBLIC_KEY}

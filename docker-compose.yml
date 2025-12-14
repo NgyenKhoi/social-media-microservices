@@ -1,0 +1,33 @@
+services:
+  # Core Infrastructure
+  postgresql:
+    image: postgres:17
+    container_name: social-media-postgres
+    environment:
+      POSTGRES_DB: social_media_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: eqfleqrd1
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - social-media-network
+
+  redis:
+    image: redis:7.2
+    container_name: social-media-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - social-media-network
+
+networks:
+  social-media-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
