@@ -112,46 +112,50 @@ git clone https://github.com/NgyenKhoi/social-media-microservices.git
 cd social-media-microservices
 ```
 
-### 3. Start Infrastructure
+### 3. Setup Environment Variables
+
+Copy the example environment file and configure your values:
 
 ```bash
-docker compose -f infrastructure/docker/docker-compose.yml up -d
+cp .env.example .env
+```
+
+**Important:** Edit `.env` file and replace placeholder values with your actual credentials:
+
+- `GOOGLE_CLIENT_ID` - Your Google OAuth2 Client ID
+- `GOOGLE_CLIENT_SECRET` - Your Google OAuth2 Client Secret  
+- `POSTGRES_PASSWORD` - Your PostgreSQL password
+- `REDIS_PASSWORD` - Your Redis password
+- `CONFIG_SERVER_PASSWORD` - Your Config Server password
+- `GRAFANA_ADMIN_PASSWORD` - Your Grafana admin password
+
+**Note:** The `.env` file is git-ignored for security. Never commit real credentials to version control.
+
+### 5. Start Infrastructure
+
+```bash
+docker compose up -d
 ```
 
 This starts:
 - PostgreSQL
-- MongoDB
-- RabbitMQ / Kafka
-- Elasticsearch
-- Prometheus
-- Grafana
-- OTEL Collector
+- Redis
+- Config Server
+- Discovery Server (Eureka)
 
-### 4. Start Core Cloud Components
-
-Start services in this order:
-
-```bash
-# Config Server
-cd config-server && mvn spring-boot:run
-
-# Discovery Server
-cd discovery-server && mvn spring-boot:run
-
-# API Gateway
-cd gateway && mvn spring-boot:run
-```
-
-### 5. Start Microservices
+### 6. Start Microservices
 
 Each service can be started independently:
 
 ```bash
-cd services/auth-service
-mvn spring-boot:run
+# Auth Service
+cd auth-service && mvn spring-boot:run
+
+# API Gateway  
+cd api-gateway && mvn spring-boot:run
 ```
 
-Repeat for other services in `services/` directory.
+**Note:** Config Server and Discovery Server are already running via Docker Compose.
 
 ---
 
