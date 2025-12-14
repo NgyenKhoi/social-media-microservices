@@ -1,0 +1,52 @@
+server:
+  port: 8761
+
+spring:
+  security:
+    user:
+      name: eureka-admin
+      password: ${EUREKA_ADMIN_PASSWORD}
+      roles: ADMIN
+
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  server:
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 15000
+    renewal-percent-threshold: 0.85
+    response-cache-update-interval-ms: 5000
+    response-cache-auto-expiration-in-seconds: 180
+    max-threads-for-status-replication: 1
+    max-threads-for-peer-replication: 1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,eureka
+  endpoint:
+    health:
+      show-details: always
+    eureka:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
+    org.springframework.security: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
