@@ -136,6 +136,9 @@ out/
 dist/
 *.zip
 
+# Development Scripts (contain credentials/local configs)
+scripts/
+
 # Others
 .secrets
 .kiro

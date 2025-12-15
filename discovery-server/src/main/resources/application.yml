@@ -1,9 +1,22 @@
-server:
-  port: 8761
-
 spring:
   application:
     name: discovery-server
+  profiles:
+    active: default
+  config:
+    import: optional:configserver:http://localhost:8888
+  cloud:
+    config:
+      uri: http://localhost:8888
+      fail-fast: false
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
+        max-interval: 2000
+        multiplier: 1.1
+
+server:
+  port: 8761
 
 eureka:
   client:
@@ -11,8 +24,6 @@ eureka:
     fetch-registry: false
     service-url:
       defaultZone: http://localhost:8761/eureka/
-  server:
-    enable-self-preservation: true
 
 management:
   endpoints:
@@ -22,12 +33,4 @@ management:
   endpoint:
     health:
       show-details: always
-  metrics:
-    export:
-      prometheus:
-        enabled: true
-
-logging:
-  level:
-    com.netflix.eureka: INFO
-    com.netflix.discovery: INFO
+      show-components: always

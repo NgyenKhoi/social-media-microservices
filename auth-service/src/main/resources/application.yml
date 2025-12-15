@@ -3,13 +3,24 @@ spring:
     name: auth-service
   profiles:
     active: dev
-  datasource:
-    url: jdbc:postgresql://localhost:5432/auth_service_db
-    username: postgres
-    password: ${DATABASE_PASSWORD:eqfleqrd1}
-    driver-class-name: org.postgresql.Driver
+  config:
+    import: "configserver:http://localhost:8888"
+  cloud:
+    config:
+      uri: http://localhost:8888
+      username: ${CONFIG_SERVER_USERNAME}
+      password: ${CONFIG_SERVER_PASSWORD}
+      fail-fast: true
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
+        max-interval: 2000
+        multiplier: 1.1
+
+# Local fallback configuration (will be overridden by Config Server)
+server:
+  port: 8081
 
 jwt:
-  key:
-    private: ${JWT_PRIVATE_KEY}
-    public: ${JWT_PUBLIC_KEY}
+  private-key-path: "classpath:jwt_private.pem"
+  public-key-path: "classpath:jwt_public.pem"
