@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
+import com.nguyenkhoi.api_gateway.config.GatewayProperties;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -21,7 +22,12 @@ public class JwtTokenValidator {
     @Value("${jwt.public-key-path:classpath:jwt_public.pem}")
     private Resource publicKeyResource;
     
+    private final GatewayProperties gatewayProperties;
     private PublicKey publicKey;
+
+    public JwtTokenValidator(GatewayProperties gatewayProperties) {
+        this.gatewayProperties = gatewayProperties;
+    }
 
     @PostConstruct
     public void initializePublicKey() {
@@ -37,11 +43,22 @@ public class JwtTokenValidator {
             throw new JwtException("Token cannot be null or empty");
         }
 
-        return Jwts.parserBuilder()
-            .setSigningKey(publicKey)
+        Claims claims = Jwts.parser()
+            .verifyWith(publicKey)
+            .requireIssuer(gatewayProperties.getJwt().getIssuer())
+            .requireAudience(gatewayProperties.getJwt().getAudience())
             .build()
-            .parseClaimsJws(token)
-            .getBody();
+            .parseSignedClaims(token)
+            .getPayload();
+
+        validateTokenExpiration(claims);
+        return claims;
+    }
+
+    private void validateTokenExpiration(Claims claims) throws JwtException {
+        if (claims.getExpiration() != null && claims.getExpiration().before(new java.util.Date())) {
+            throw new JwtException("Token has expired");
+        }
     }
 
     private PublicKey loadPublicKeyFromResource() throws Exception {

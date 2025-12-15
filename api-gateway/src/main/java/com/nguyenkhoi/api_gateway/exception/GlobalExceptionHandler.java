@@ -27,10 +27,11 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         
         HttpStatus status = determineHttpStatus(ex);
         String message = determineErrorMessage(ex, status);
+        String requestPath = exchange.getRequest().getPath().value();
         
         response.setStatusCode(status);
         
-        String errorBody = createErrorResponse(message, status);
+        String errorBody = createErrorResponse(message, status, requestPath);
         var buffer = response.bufferFactory().wrap(errorBody.getBytes(StandardCharsets.UTF_8));
         
         return response.writeWith(Mono.just(buffer));
@@ -56,13 +57,13 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         };
     }
 
-    private String createErrorResponse(String message, HttpStatus status) {
+    private String createErrorResponse(String message, HttpStatus status, String path) {
         return String.format(
             "{\"error\":{\"message\":\"%s\",\"status\":%d,\"timestamp\":\"%s\",\"path\":\"%s\"}}",
             message,
             status.value(),
             Instant.now().toString(),
-            "gateway"
+            path
         );
     }
 }
