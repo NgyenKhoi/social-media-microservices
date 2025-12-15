@@ -1,0 +1,42 @@
+server:
+  port: 0  # Random port for testing
+
+spring:
+  cloud:
+    config:
+      enabled: false  # Disable config server for tests
+  security:
+    user:
+      name: test-admin
+      password: test-password
+      roles: ADMIN
+
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  server:
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
+    response-cache-update-interval-ms: 1000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.springframework.security: WARN
+    com.nguyenkhoi.discovery_server: DEBUG

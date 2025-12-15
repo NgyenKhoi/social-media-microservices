@@ -11,47 +11,21 @@ spring:
       server:
         native:
           search-locations: classpath:/config-repo/
-        encrypt:
-          enabled: true
-        health:
-          enabled: true
   security:
     user:
-      name: config-admin
+      name: ${CONFIG_SERVER_USERNAME}
       password: ${CONFIG_SERVER_PASSWORD}
-      roles: ADMIN
 
 eureka:
   client:
-    service-url:
+    serviceUrl:
       defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
+    # Graceful handling when Eureka is not available
+    registry-fetch-interval-seconds: 30
+    initial-instance-info-replication-interval-seconds: 40
   instance:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 30
     lease-expiration-duration-in-seconds: 90
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,refresh,env,configprops
-  endpoint:
-    health:
-      show-details: always
-    refresh:
-      enabled: true
-  health:
-    config:
-      enabled: true
-
-logging:
-  level:
-    org.springframework.cloud.config: DEBUG
-    org.springframework.security: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-
-encrypt:
-  key: ${CONFIG_ENCRYPT_KEY}
