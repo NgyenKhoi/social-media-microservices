@@ -1,81 +1,86 @@
 package com.nguyenkhoi.auth_service.exception;
 
-import org.hibernate.LazyInitializationException;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-
 import com.nguyenkhoi.auth_service.dto.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 
-import java.util.NoSuchElementException;
+import java.util.HashMap;
+import java.util.Map;
 
-@ControllerAdvice
+@Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(value = AppException.class)
-    ResponseEntity<ApiResponse<Void>> handleAppException(AppException e) {
-        ApiResponse<Void> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(e.getErrorCode().getCode());
-        apiResponse.setMessage(e.getMessage());
-        return ResponseEntity.status(e.getErrorCode().getStatusCode()).body(apiResponse);
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        
+        log.warn("Validation error: {}", errors);
+        ApiResponse<Map<String, String>> response = ApiResponse.<Map<String, String>>builder()
+                .code(400)
+                .message("Validation failed")
+                .data(errors)
+                .timestamp(java.time.LocalDateTime.now())
+                .build();
+        
+        return ResponseEntity.badRequest().body(response);
     }
 
-    // Handle spring validation exception
-    @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException e) {
-        ApiResponse<Void> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(ErrorCode.VALIDATION_VIOLATED.getCode());
-        String fieldError = e.getFieldError() != null ? e.getFieldError().getDefaultMessage() : "Unknown field";
-        apiResponse.setMessage(ErrorCode.VALIDATION_VIOLATED.getMessage() + " " + fieldError);
-        return ResponseEntity.status(ErrorCode.VALIDATION_VIOLATED.getStatusCode()).body(apiResponse);
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAppException(AppException ex, WebRequest request) {
+        log.error("Application error: {} - {}", ex.getErrorCode(), ex.getMessage());
+        
+        HttpStatus status = switch (ex.getErrorCode()) {
+            case USER_NOTEXISTED, AUTHENTICATION_INVALID -> HttpStatus.UNAUTHORIZED;
+            case USER_EXISTED, EMAIL_EXISTED -> HttpStatus.CONFLICT;
+            case TOKEN_INVALID, TOKEN_EXPIRED, JWT_EXCEPTION -> HttpStatus.UNAUTHORIZED;
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
+        
+        return ResponseEntity.status(status)
+                .body(ApiResponse.error(status.value(), ex.getMessage()));
     }
 
-    // Handle LazyInitializationException (Hibernate lazy loading issue)
-    @ExceptionHandler(value = LazyInitializationException.class)
-    ResponseEntity<ApiResponse<Void>> handleLazyInitializationException(LazyInitializationException e) {
-        ApiResponse<Void> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(ErrorCode.UNEXPECTED_EXCEPTION.getCode());
-        apiResponse.setMessage("Data loading error: " + e.getMessage());
-        return ResponseEntity.status(ErrorCode.UNEXPECTED_EXCEPTION.getStatusCode()).body(apiResponse);
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex) {
+        log.warn("Bad credentials: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.unauthorized("Invalid email or password"));
     }
 
-    // Handle NoSuchElementException (e.g., resource not found)
-    @ExceptionHandler(value = NoSuchElementException.class)
-    ResponseEntity<ApiResponse<Void>> handleNoSuchElementException(NoSuchElementException e) {
-        ApiResponse<Void> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(ErrorCode.INTERNAL_SERVER_ERROR.getCode());
-        apiResponse.setMessage(e.getMessage() != null ? e.getMessage() : "Resource not found");
-        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getStatusCode()).body(apiResponse);
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUsernameNotFound(UsernameNotFoundException ex) {
+        log.warn("Username not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.unauthorized("Invalid email or password"));
     }
 
-    // Handle IllegalArgumentException (e.g., invalid UUID, invalid request)
-    @ExceptionHandler(value = IllegalArgumentException.class)
-    ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
-        ApiResponse<Void> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(ErrorCode.INVALID_REQUEST.getCode());
-        apiResponse.setMessage(e.getMessage() != null ? e.getMessage() : "Invalid request");
-        return ResponseEntity.status(ErrorCode.INVALID_REQUEST.getStatusCode()).body(apiResponse);
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("Illegal argument: {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.badRequest(ex.getMessage()));
     }
 
-    // Handle NullPointerException
-    @ExceptionHandler(value = NullPointerException.class)
-    ResponseEntity<ApiResponse<Void>> handleNullPointerException(NullPointerException e) {
-        ApiResponse<Void> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(ErrorCode.UNEXPECTED_EXCEPTION.getCode());
-        apiResponse.setMessage("Data loading error: Null pointer exception. " + (e.getMessage() != null ? e.getMessage() : ""));
-        e.printStackTrace(); // Log stack trace for debugging
-        return ResponseEntity.status(ErrorCode.UNEXPECTED_EXCEPTION.getStatusCode()).body(apiResponse);
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex, WebRequest request) {
+        log.error("Unexpected error occurred", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.internalError("An unexpected error occurred"));
     }
-
-    // Handle unexpected exception (enable for debugging)
-    @ExceptionHandler(value = Exception.class)
-    ResponseEntity<ApiResponse<Void>> handleUncategorizedException(Exception e) {
-        ApiResponse<Void> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(ErrorCode.UNEXPECTED_EXCEPTION.getCode());
-        apiResponse.setMessage("Unexpected error: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
-        e.printStackTrace(); // Log full stack trace for debugging
-        return ResponseEntity.status(ErrorCode.UNEXPECTED_EXCEPTION.getStatusCode()).body(apiResponse);
-    }
-
 }

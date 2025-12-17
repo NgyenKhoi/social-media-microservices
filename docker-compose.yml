@@ -8,11 +8,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "5430:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - social-media-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7.2
@@ -72,20 +77,16 @@ services:
     ports:
       - "${AUTH_SERVICE_PORT}:8081"
     environment:
-      - CONFIG_SERVER_USERNAME=${CONFIG_SERVER_USERNAME}
-      - CONFIG_SERVER_PASSWORD=${CONFIG_SERVER_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_AUTH_DB}
+      # Database connection to PostgreSQL container
+      - DATABASE_URL=jdbc:postgresql://postgresql:5432/${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
+
+      - CONFIG_SERVER_USERNAME=${CONFIG_SERVER_USERNAME}
+      - CONFIG_SERVER_PASSWORD=${CONFIG_SERVER_PASSWORD}
+      - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     depends_on:
-      config-server:
-        condition: service_healthy
-      discovery-server:
-        condition: service_healthy
       postgresql:
         condition: service_started
       redis:
