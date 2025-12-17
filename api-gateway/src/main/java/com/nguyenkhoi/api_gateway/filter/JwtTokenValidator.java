@@ -19,7 +19,7 @@ import java.util.Base64;
 @Service
 public class JwtTokenValidator {
 
-    @Value("${jwt.public-key-path:classpath:jwt_public.pem}")
+    @Value("${jwt.public-key-path}")
     private Resource publicKeyResource;
     
     private final GatewayProperties gatewayProperties;

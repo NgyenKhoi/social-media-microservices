@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_AUTH_DB}
+    url: jdbc:postgresql://localhost:5432/auth_db
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -27,6 +27,25 @@ jwt:
   public-key-path: classpath:jwt_public.pem
   access-token-expiration: 900000  # 15 minutes
   refresh-token-expiration: 604800000  # 7 days
+
+spring:
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: http://localhost:8081
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: openid,profile,email
+            redirect-uri: "http://localhost:8081/oauth2/callback/google"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v2/userinfo
+            jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
 
 oauth2:
   google:

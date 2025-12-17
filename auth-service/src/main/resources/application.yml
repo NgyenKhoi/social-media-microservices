@@ -1,26 +1,123 @@
 spring:
   application:
     name: auth-service
-  profiles:
-    active: dev
+  
+  # Database Configuration (Local PostgreSQL)
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+      validation-timeout: 5000
+      leak-detection-threshold: 60000
+  
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    open-in-view: false
+  
+  # Liquibase Configuration
+  liquibase:
+    enabled: false
+  
+  # Config Server (Optional - only if needed)
   config:
-    import: "configserver:http://localhost:8888"
+    import: "optional:configserver:${CONFIG_SERVER_URL}"
   cloud:
     config:
-      uri: http://localhost:8888
+      uri: ${CONFIG_SERVER_URL}
       username: ${CONFIG_SERVER_USERNAME}
       password: ${CONFIG_SERVER_PASSWORD}
-      fail-fast: true
-      retry:
-        initial-interval: 1000
-        max-attempts: 6
-        max-interval: 2000
-        multiplier: 1.1
+      fail-fast: false
+      enabled: false
+  
+  # OAuth2 Authorization Server Configuration
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: ${OAUTH2_ISSUER}
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: openid,profile,email
+            redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v2/userinfo
+            jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
 
-# Local fallback configuration (will be overridden by Config Server)
+# Server Configuration
 server:
   port: 8081
 
+# Eureka Configuration
+eureka:
+  client:
+    enabled: false
+
+# JWT Configuration
 jwt:
-  private-key-path: "classpath:jwt_private.pem"
-  public-key-path: "classpath:jwt_public.pem"
+  key:
+    private-path: ${JWT_PRIVATE_KEY_PATH}
+    public-path: ${JWT_PUBLIC_KEY_PATH:classpath:jwt_public.pem}
+  access-token:
+    expiration: 900  # 15 minutes in seconds
+  refresh-token:
+    expiration: 604800  # 7 days in seconds
+  issuer: auth-service
+  audience: social-media-platform
+
+# Security Configuration
+security:
+  max-refresh-tokens-per-user: 10
+  max-sessions-per-user: 5
+  session-timeout-hours: 24
+  cors:
+    allowed-origins: 
+      - http://localhost:3000
+      - http://localhost:5173
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: Content-Type,Authorization,X-Requested-With
+    allow-credentials: true
+
+# OAuth2 Configuration
+oauth2:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+    redirect-uri: http://localhost:8081/oauth2/callback/google
+
+# Logging Configuration
+logging:
+  level:
+    com.nguyenkhoi.auth_service: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
