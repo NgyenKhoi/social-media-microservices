@@ -14,15 +14,23 @@ import java.security.spec.RSAPublicKeySpec;
 import java.math.BigInteger;
 
 import com.nguyenkhoi.auth_service.utils.PemUtils;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class JwtKeyConfig {
 
-    @Value("${jwt.key.private}")
-    private String privateKeyPem;
+    @Autowired
+    private ResourceLoader resourceLoader;
+
+    @Value("${jwt.key.private-path}")
+    private String privateKeyPath;
 
     @Bean
     public RSAKey rsaKey() {
+        String privateKeyPem = loadPrivateKeyFromPath(privateKeyPath);
         RSAPrivateKey privateKey = PemUtils.parseRSAPrivateKey(privateKeyPem);
         RSAPublicKey publicKey = derivePublicKey(privateKey);
 
@@ -59,6 +67,15 @@ public class JwtKeyConfig {
             return rsaKey.toRSAPrivateKey();
         } catch (JOSEException e) {
             throw new AppException(ErrorCode.JWT_EXCEPTION, "Failed to extract RSA private key from RSAKey");
+        }
+    }
+
+    private String loadPrivateKeyFromPath(String keyPath) {
+        try {
+            Resource resource = resourceLoader.getResource(keyPath);
+            return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.JWT_EXCEPTION, "Failed to load private key from path: " + keyPath);
         }
     }
 }
