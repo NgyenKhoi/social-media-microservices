@@ -1,0 +1,25 @@
+#!/bin/bash
+set -e
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+  CREATE DATABASE auth_db;
+  CREATE DATABASE keycloak_db;
+
+  CREATE USER auth_user WITH PASSWORD '${AUTH_DB_PASSWORD}';
+  CREATE USER keycloak_user WITH PASSWORD '${KEYCLOAK_DB_PASSWORD}';
+
+  GRANT ALL PRIVILEGES ON DATABASE auth_db TO auth_user;
+  GRANT ALL PRIVILEGES ON DATABASE keycloak_db TO keycloak_user;
+EOSQL
+
+psql --username "$POSTGRES_USER" --dbname auth_db <<-EOSQL
+  GRANT ALL ON SCHEMA public TO auth_user;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO auth_user;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO auth_user;
+EOSQL
+
+psql --username "$POSTGRES_USER" --dbname keycloak_db <<-EOSQL
+  GRANT ALL ON SCHEMA public TO keycloak_user;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO keycloak_user;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO keycloak_user;
+EOSQL

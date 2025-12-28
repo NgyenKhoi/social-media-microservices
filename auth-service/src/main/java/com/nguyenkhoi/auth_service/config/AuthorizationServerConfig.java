@@ -99,7 +99,7 @@ public class AuthorizationServerConfig {
 
     @Bean
     public AuthorizationServerSettings authorizationServerSettings(
-            @Value("${spring.security.oauth2.authorizationserver.issuer:http://localhost:8081}") String issuer) {
+            @Value("${spring.security.oauth2.authorizationserver.issuer}") String issuer) {
 
         if (issuer == null || issuer.isBlank()) {
             throw new AppException(

@@ -32,16 +32,16 @@ public class Oauth2Client {
     @Column(name = "client_name", length = 100)
     private String clientName;
 
-    @Column(name = "authentication_methods", length = Integer.MAX_VALUE)
+    @Column(name = "authentication_methods", columnDefinition = "TEXT")
     private String authenticationMethods;
 
-    @Column(name = "authorization_grant_types", length = Integer.MAX_VALUE)
+    @Column(name = "authorization_grant_types", columnDefinition = "TEXT")
     private String authorizationGrantTypes;
 
-    @Column(name = "redirect_uris", length = Integer.MAX_VALUE)
+    @Column(name = "redirect_uris", columnDefinition = "TEXT")
     private String redirectUris;
 
-    @Column(name = "scopes", length = Integer.MAX_VALUE)
+    @Column(name = "scopes", columnDefinition = "TEXT")
     private String scopes;
 
     @Column(name = "access_token_ttl")
