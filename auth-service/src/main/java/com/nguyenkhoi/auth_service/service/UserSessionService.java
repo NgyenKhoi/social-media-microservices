@@ -48,6 +48,13 @@ public class UserSessionService {
         return sessionRepository.save(session);
     }
 
+    @Transactional
+    public String createSession(AppUser user, String userAgent, String ipAddress) {
+        String deviceInfo = extractDeviceInfo(userAgent);
+        UserSession session = createSession(user, ipAddress, userAgent, deviceInfo);
+        return session.getId().toString();
+    }
+
     public Optional<SessionResponse> findById(UUID sessionId) {
         return sessionRepository.findById(sessionId)
                 .map(sessionMapper::toResponse);

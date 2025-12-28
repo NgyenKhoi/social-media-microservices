@@ -32,6 +32,7 @@ public class JwtTokenService {
 
     private final RSAPrivateKey jwtSigningKey;
     private final RSAPublicKey jwtValidationKey;
+    private final com.nguyenkhoi.auth_service.repository.AppUserRepository appUserRepository;
 
     @Value("${jwt.access-token.expiration}")
     private long accessTokenExpiration;
@@ -44,6 +45,46 @@ public class JwtTokenService {
 
     @Value("${jwt.audience}")
     private String audience;
+
+    public String generateAccessToken(AppUser user, String sessionId) {
+        return generateAccessToken(user, sessionId, generateChainId());
+    }
+
+    public String generateAccessToken(AppUser user, String sessionId, String chainId) {
+        try {
+            Instant now = Instant.now();
+            Instant expiration = now.plus(accessTokenExpiration, ChronoUnit.SECONDS);
+
+            List<String> roles = user.getRoles().stream()
+                    .map(UserRole::getName)
+                    .collect(Collectors.toList());
+
+            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                    .subject(user.getId().toString())
+                    .issuer(issuer)
+                    .audience(audience)
+                    .issueTime(Date.from(now))
+                    .expirationTime(Date.from(expiration))
+                    .claim("email", user.getEmail())
+                    .claim("username", user.getUsername())
+                    .claim("roles", roles)
+                    .claim("session_id", sessionId)
+                    .claim("chain_id", chainId)
+                    .claim("token_type", "access")
+                    .build();
+
+            JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+                    .keyID("auth-service-rsa-1")
+                    .build();
+
+            SignedJWT signedJWT = new SignedJWT(header, claimsSet);
+            signedJWT.sign(new RSASSASigner(jwtSigningKey));
+
+            return signedJWT.serialize();
+        } catch (JOSEException e) {
+            throw new AppException(ErrorCode.JWT_EXCEPTION);
+        }
+    }
 
     public String generateAccessToken(AppUser user, UserSession session, String chainId) {
         try {
@@ -193,5 +234,19 @@ public class JwtTokenService {
 
     public long getRefreshTokenExpiration() {
         return refreshTokenExpiration;
+    }
+
+    public AppUser getUserFromToken(String token) {
+        JWTClaimsSet claims = validateToken(token);
+        UUID userId = extractUserId(claims);
+        
+        return appUserRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    }
+
+    public String generateRefreshToken(AppUser user, String sessionId, String ipAddress, String userAgent) {
+        // This method should delegate to RefreshTokenService
+        // For now, return a simple token identifier
+        return generateRefreshTokenIdentifier();
     }
 }

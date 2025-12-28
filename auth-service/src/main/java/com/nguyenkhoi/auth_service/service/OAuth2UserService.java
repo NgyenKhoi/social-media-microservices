@@ -1,13 +1,11 @@
 package com.nguyenkhoi.auth_service.service;
 
-import com.nguyenkhoi.auth_service.dto.response.UserResponse;
 import com.nguyenkhoi.auth_service.entities.AppUser;
 import com.nguyenkhoi.auth_service.entities.UserExternalAccount;
 import com.nguyenkhoi.auth_service.entities.UserExternalAccount.OAuthProvider;
 import com.nguyenkhoi.auth_service.entities.UserRole;
 import com.nguyenkhoi.auth_service.exception.AppException;
 import com.nguyenkhoi.auth_service.exception.ErrorCode;
-import com.nguyenkhoi.auth_service.mapper.UserMapper;
 import com.nguyenkhoi.auth_service.repository.AppUserRepository;
 import com.nguyenkhoi.auth_service.repository.UserExternalAccountRepository;
 import com.nguyenkhoi.auth_service.repository.UserRoleRepository;
@@ -29,7 +27,7 @@ public class OAuth2UserService {
     private final AppUserRepository userRepository;
     private final UserExternalAccountRepository externalAccountRepository;
     private final UserRoleRepository userRoleRepository;
-    private final UserMapper userMapper;
+    private final TokenEncryptionService tokenEncryptionService;
 
     @Transactional
     public AppUser processOAuth2User(OAuthProvider provider, String providerUserId, 
@@ -175,14 +173,14 @@ public class OAuth2UserService {
         if (token == null) {
             return null;
         }
-        return token;
+        return tokenEncryptionService.encrypt(token);
     }
 
     private String decryptToken(String encryptedToken) {
         if (encryptedToken == null) {
             return null;
         }
-        return encryptedToken;
+        return tokenEncryptionService.decrypt(encryptedToken);
     }
 
     @Transactional

@@ -64,9 +64,15 @@ public class OAuth2ClientService implements RegisteredClientRepository {
 
     @Override
     public RegisteredClient findById(String id) {
-        return oauth2ClientRepository.findByClientId(id)
-                .map(this::toRegisteredClient)
-                .orElse(null);
+        try {
+            Long entityId = Long.parseLong(id);
+            return oauth2ClientRepository.findById(entityId)
+                    .map(this::toRegisteredClient)
+                    .orElse(null);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid ID format for OAuth2 client: {}", id);
+            return null;
+        }
     }
 
     @Override

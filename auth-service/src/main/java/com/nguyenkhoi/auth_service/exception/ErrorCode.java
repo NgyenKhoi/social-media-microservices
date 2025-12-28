@@ -37,6 +37,8 @@ public enum ErrorCode {
     // OAuth2
     OAUTH_ACCOUNT_ALREADY_LINKED(4001, "OAuth account already linked", HttpStatus.BAD_REQUEST),
     OAUTH_ACCOUNT_NOT_FOUND(4002, "OAuth account not found", HttpStatus.NOT_FOUND),
+    OAUTH_STATE_INVALID(4003, "Invalid OAuth state parameter", HttpStatus.BAD_REQUEST),
+    OAUTH_CODE_EXCHANGE_FAILED(4004, "Failed to exchange OAuth authorization code", HttpStatus.BAD_REQUEST),
 
     // Not Implemented
     NOT_IMPLEMENTED(5001, "Feature not implemented", HttpStatus.NOT_IMPLEMENTED),
