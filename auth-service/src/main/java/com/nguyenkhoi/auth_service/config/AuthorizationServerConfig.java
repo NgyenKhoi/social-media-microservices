@@ -69,7 +69,7 @@ public class AuthorizationServerConfig {
         http
             .authorizeHttpRequests(authorize ->
                 authorize
-                    .requestMatchers("/api/auth/**", "/error", "/.well-known/**").permitAll()
+                    .requestMatchers("/api/auth/**", "/error", "/.well-known/**", "/api/oauth2/**").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                     .anyRequest().authenticated()
             )

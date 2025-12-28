@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -151,6 +152,11 @@ public class OAuth2UserService {
         }
 
         baseUsername = baseUsername.replaceAll("[^a-zA-Z0-9_]", "").toLowerCase();
+
+        if (baseUsername.isEmpty()) {
+            baseUsername = provider.name().toLowerCase() + "_" + providerUserId.replaceAll("[^a-zA-Z0-9_]", "");
+        }
+
         if (baseUsername.length() > 30) {
             baseUsername = baseUsername.substring(0, 30);
         }
@@ -158,16 +164,19 @@ public class OAuth2UserService {
         String username = baseUsername;
         int counter = 1;
         while (userRepository.existsByUsername(username)) {
-            username = baseUsername + "_" + counter;
-            counter++;
-            if (counter > 1000) {
-                username = baseUsername + "_" + System.currentTimeMillis();
-                break;
-            }
-        }
+                username = baseUsername + "_" + counter;
+                counter++;
 
-        return username;
-    }
+                if (counter > 10000) {
+                    username = baseUsername + "_" + UUID.randomUUID().toString().substring(0, 8);
+                    while (userRepository.existsByUsername(username)) {
+                        username = baseUsername + "_" + UUID.randomUUID().toString().substring(0, 8);
+                    }
+                    break;
+                }
+            }
+            return username;
+        }
 
     private String encryptToken(String token) {
         if (token == null) {
@@ -181,11 +190,6 @@ public class OAuth2UserService {
             return null;
         }
         return tokenEncryptionService.decrypt(encryptedToken);
-    }
-
-    @Transactional
-    public void refreshOAuthToken(UserExternalAccount account) {
-        throw new AppException(ErrorCode.NOT_IMPLEMENTED);
     }
 
     public boolean needsTokenRefresh(UserExternalAccount account) {

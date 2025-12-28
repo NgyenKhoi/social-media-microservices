@@ -4,7 +4,7 @@ spring:
   
   # Database Configuration (Local PostgreSQL)
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql}
+    url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -88,7 +88,7 @@ eureka:
 jwt:
   key:
     private-path: ${JWT_PRIVATE_KEY_PATH}
-    public-path: ${JWT_PUBLIC_KEY_PATH:classpath:jwt_public.pem}
+    public-path: ${JWT_PUBLIC_KEY_PATH}
   access-token:
     expiration: 900  # 15 minutes in seconds
   refresh-token:

@@ -37,7 +37,7 @@ public class OAuth2Controller {
     public ResponseEntity<ApiResponse<AuthResponse>> handleGoogleCallback(
             @Valid @RequestBody OAuth2CallbackRequest request,
             HttpServletRequest httpRequest) {
-        log.info("Handling Google OAuth callback with code: {}", request.getCode());
+        log.info("Handling Google OAuth callback");
         
         String userAgent = httpRequest.getHeader("User-Agent");
         String ipAddress = getClientIpAddress(httpRequest);
